@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jo's Business Quest</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<style>
+    body { margin:0; background: #88cc88; }
+    canvas { display:block; margin:0 auto; }
+    #infoBox {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 350px;
+        padding: 10px;
+        background: rgba(255,255,255,0.9);
+        border: 2px solid #000;
+        font-family: Courier, monospace;
+        display: none;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<div id="infoBox"></div>
+
+<script>
+const config = {
+    type: Phaser.AUTO,
+    width: 480,
+    height: 320,
+    backgroundColor: 0x88cc88,
+    physics: { default: 'arcade' },
+    scene: { preload, create, update }
+};
+
+const game = new Phaser.Game(config);
+
+let player;
+let cursors;
+let npcs = [];
+const infoBox = document.getElementById('infoBox');
+
+function preload() {
+    // 이미지 제거, 도형으로 대체
+}
+
+function create() {
+    // 플레이어: 파란색 사각형 (선택적)
+    player = this.add.rectangle(240, 160, 32, 32, 0x0000ff);
+    this.physics.add.existing(player);
+    player.body.setCollideWorldBounds(true);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // 사각형 3개: Contact, Company, Name
+    const npcData = [
+        { x: 100, y: 160, text: "Contact:\nE-mail: joroy0413@gmail.com\nPhoneNumber: 010-1234-5678", label: 'Contact' },
+        { x: 240, y: 160, text: "Company:\nXXGameCompany - Game Programmer", label: 'Company' },
+        { x: 380, y: 160, text: "Name:\nJo EuiHyeon", label: 'Name' }
+    ];
+
+    npcData.forEach(data => {
+        let npc = this.add.rectangle(data.x, data.y, 100, 50, 0xff0000).setInteractive();
+        this.add.text(data.x, data.y, data.label, { font: '16px Courier', fill: '#fff' }).setOrigin(0.5);
+        npc.data = data;
+        npc.on('pointerdown', () => {
+            infoBox.style.display = 'block';
+            infoBox.textContent = data.text;
+        });
+        npcs.push(npc);
+    });
+}
+
+function update() {
+    if (!player.body) return;
+    player.body.setVelocity(0);
+
+    if (cursors.left.isDown) player.body.setVelocityX(-100);
+    else if (cursors.right.isDown) player.body.setVelocityX(100);
+
+    if (cursors.up.isDown) player.body.setVelocityY(-100);
+    else if (cursors.down.isDown) player.body.setVelocityY(100);
+}
+</script>
+
+</body>
+</html>
