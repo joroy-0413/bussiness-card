@@ -2,89 +2,87 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Jo's Business Quest</title>
+<title>Mario Style Business Card</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <style>
-    body { margin:0; background: #88cc88; }
-    canvas { display:block; margin:0 auto; }
-    #infoBox {
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 350px;
-        padding: 10px;
-        background: rgba(255,255,255,0.9);
-        border: 2px solid #000;
-        font-family: Courier, monospace;
-        display: none;
-        text-align: center;
-    }
+  body { margin:0; background:#88cc88; }
+  canvas { display:block; margin:0 auto; }
+  #infoBox {
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    width:400px;
+    padding:10px;
+    background:rgba(255,255,255,0.9);
+    border:2px solid #000;
+    font-family:Courier, monospace;
+    text-align:center;
+  }
 </style>
 </head>
 <body>
-
-<div id="infoBox"></div>
-
+<div id="infoBox">Touch/Hit a block to see info!</div>
 <script>
 const config = {
-    type: Phaser.AUTO,
-    width: 480,
-    height: 320,
-    backgroundColor: 0x88cc88,
-    physics: { default: 'arcade' },
-    scene: { preload, create, update }
+  type: Phaser.AUTO,
+  width: 480,
+  height: 320,
+  physics: { default: 'arcade', arcade: { gravity: { y: 600 }, debug: false } },
+  scene: { preload, create, update }
 };
-
 const game = new Phaser.Game(config);
 
 let player;
 let cursors;
-let npcs = [];
-const infoBox = document.getElementById('infoBox');
+let infoBox = document.getElementById('infoBox');
+let infoBlocks;
 
-function preload() {
-    // 이미지 제거, 도형으로 대체
-}
+function preload() {}
 
 function create() {
-    // 플레이어: 파란색 사각형 (선택적)
-    player = this.add.rectangle(240, 160, 32, 32, 0x0000ff);
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true);
+  // Platforms group
+  const platforms = this.physics.add.staticGroup();
+  platforms.create(240, 310, null).setDisplaySize(480,20).refreshBody(); // ground
+  platforms.create(120, 200, null).setDisplaySize(100,20).refreshBody();
+  platforms.create(360, 200, null).setDisplaySize(100,20).refreshBody();
+  platforms.create(240, 120, null).setDisplaySize(100,20).refreshBody();
 
-    cursors = this.input.keyboard.createCursorKeys();
+  // Player
+  player = this.add.rectangle(50, 280, 20, 30, 0x0000ff);
+  this.physics.add.existing(player);
+  player.body.setCollideWorldBounds(true);
+  player.body.setBounce(0.1);
+  this.physics.add.collider(player, platforms);
 
-    // 사각형 3개: Contact, Company, Name
-    const npcData = [
-        { x: 100, y: 160, text: "Contact:\nE-mail: joroy0413@gmail.com\nPhoneNumber: 010-1234-5678", label: 'Contact' },
-        { x: 240, y: 160, text: "Company:\nXXGameCompany - Game Programmer", label: 'Company' },
-        { x: 380, y: 160, text: "Name:\nJo EuiHyeon", label: 'Name' }
-    ];
+  cursors = this.input.keyboard.createCursorKeys();
 
-    npcData.forEach(data => {
-        let npc = this.add.rectangle(data.x, data.y, 100, 50, 0xff0000).setInteractive();
-        this.add.text(data.x, data.y, data.label, { font: '16px Courier', fill: '#fff' }).setOrigin(0.5);
-        npc.data = data;
-        npc.on('pointerdown', () => {
-            infoBox.style.display = 'block';
-            infoBox.textContent = data.text;
-        });
-        npcs.push(npc);
-    });
+  // Info blocks
+  infoBlocks = this.physics.add.staticGroup();
+  const infoData = [
+    { x: 120, y: 170, text:"Contact:\nE-mail: joroy0413@gmail.com\nPhone: 010-1234-5678" },
+    { x: 360, y: 170, text:"Company:\nXXGameCompany - Game Programmer" },
+    { x: 240, y: 100, text:"Name:\nJo EuiHyeon" }  // 플랫폼 위쪽으로 위치 조정
+  ];
+
+  infoData.forEach(data => {
+    let block = this.add.rectangle(data.x, data.y, 40, 20, 0xff0000);
+    this.physics.add.existing(block, true);
+    block.data = data;
+    infoBlocks.add(block);
+    this.physics.add.overlap(player, block, () => {
+      infoBox.textContent = block.data.text;
+    }, null, this);
+  });
 }
 
 function update() {
-    if (!player.body) return;
-    player.body.setVelocity(0);
+  player.body.setVelocityX(0);
+  if(cursors.left.isDown) player.body.setVelocityX(-150);
+  else if(cursors.right.isDown) player.body.setVelocityX(150);
 
-    if (cursors.left.isDown) player.body.setVelocityX(-100);
-    else if (cursors.right.isDown) player.body.setVelocityX(100);
-
-    if (cursors.up.isDown) player.body.setVelocityY(-100);
-    else if (cursors.down.isDown) player.body.setVelocityY(100);
+  if(cursors.up.isDown && player.body.touching.down) player.body.setVelocityY(-380);
 }
 </script>
-
 </body>
 </html>
